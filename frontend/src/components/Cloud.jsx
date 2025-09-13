@@ -76,7 +76,7 @@ const WordCloud = ({ words, question }) => {
                     });
             });
 
-        console.log("Fallback word cloud created successfully");
+        console.log("Fallback word cloud created successfully with", words.length, "words");
     };
 
     useEffect(() => {
@@ -173,27 +173,7 @@ const WordCloud = ({ words, question }) => {
         );
     }
 
-    return (
-        <div className="relative">
-            <svg ref={svgRef} className="w-full h-full"></svg>
-            {/* HTML fallback overlay - always show words */}
-            <div className="absolute inset-0 flex flex-wrap justify-center items-center gap-4 pointer-events-none">
-                {words.map((word, index) => (
-                    <span
-                        key={`${word}-${index}`}
-                        className="px-4 py-2 bg-white shadow-lg rounded-lg text-lg font-bold pointer-events-auto"
-                        style={{
-                            color: ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16'][index % 8],
-                            transform: `rotate(${(Math.random() - 0.5) * 20}deg)`,
-                            fontSize: `${32 + Math.random() * 16}px`
-                        }}
-                    >
-                        {word}
-                    </span>
-                ))}
-            </div>
-        </div>
-    );
+    return <svg ref={svgRef} className="w-full h-full"></svg>;
 };
 
 export default WordCloud;
