@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import * as d3 from "d3";
-import cloud from "d3-cloud";
+import { cloud } from "d3-cloud";
 
 const WordCloud = ({ words, question }) => {
     const svgRef = useRef(null);

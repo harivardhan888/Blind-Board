@@ -5,14 +5,35 @@ import io from "socket.io-client";
 import WordCloud from "./Cloud";
 
 
-const socket = io("https://blind-board-1.onrender.com");
+const socket = io("https://wordcloud-twql.onrender.com");
 
 // WordCloud Component
 const WordCloudComp = () => {
   const [words, setWords] = useState([]);
   const [question, setQuestion] = useState("");
+  const [isConnected, setIsConnected] = useState(false);
+  const [connectionError, setConnectionError] = useState(null);
 
   useEffect(() => {
+    // Connection status handlers
+    socket.on("connect", () => {
+      setIsConnected(true);
+      setConnectionError(null);
+      console.log("Connected to server");
+    });
+
+    socket.on("disconnect", () => {
+      setIsConnected(false);
+      console.log("Disconnected from server");
+    });
+
+    socket.on("connect_error", (error) => {
+      setConnectionError("Failed to connect to server");
+      setIsConnected(false);
+      console.error("Connection error:", error);
+    });
+
+    // Data handlers
     socket.on("word", (word) => {
       setWords((prevWords) => [...prevWords, word]);
     });
@@ -20,11 +41,12 @@ const WordCloudComp = () => {
     socket.on("question", (newQuestion) => {
       setQuestion(newQuestion);
       setWords([]);
-
-    //   window.location.reload();
     });
 
     return () => {
+      socket.off("connect");
+      socket.off("disconnect");
+      socket.off("connect_error");
       socket.off("word");
       socket.off("question");
     };
@@ -39,7 +61,19 @@ const WordCloudComp = () => {
       >
         <div className="flex items-center justify-center mb-8 space-x-3">
           <h1 className="text-3xl font-bold text-gray-800">Blind Board</h1>
+          <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} 
+               title={isConnected ? 'Connected' : 'Disconnected'}></div>
         </div>
+        
+        {connectionError && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4"
+          >
+            {connectionError}
+          </motion.div>
+        )}
 
         <AnimatePresence mode="wait">
           {question && (
@@ -60,8 +94,17 @@ const WordCloudComp = () => {
           layout
           className="bg-white rounded-lg shadow-lg p-8"
         >
-        
-        <WordCloud words={words} question={question} />
+          {words.length > 0 ? (
+            <WordCloud words={words} question={question} />
+          ) : (
+            <div className="text-center text-gray-500 py-8">
+              <Cloud className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+              <p className="text-lg">Waiting for responses...</p>
+              <p className="text-sm mt-2">
+                {isConnected ? 'Connected and ready to receive data' : 'Connecting to server...'}
+              </p>
+            </div>
+          )}
         </motion.div>
       </motion.div>
     </div>
