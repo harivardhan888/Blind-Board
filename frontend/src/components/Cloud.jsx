@@ -133,8 +133,17 @@ const WordCloud = ({ words, question }) => {
     }, [words]);
 
     useEffect(() => {
+        // Clear SVG when question changes, but don't clear words
         d3.select(svgRef.current).selectAll("*").remove();
         setHasError(false);
+        
+        // Re-render words if they exist
+        if (words.length > 0) {
+            console.log("Re-rendering words after question change:", words);
+            const width = 500;
+            const height = 300;
+            createFallbackWordCloud(words, width, height);
+        }
     }, [question]);
 
     if (hasError) {
@@ -167,11 +176,11 @@ const WordCloud = ({ words, question }) => {
     return (
         <div className="relative">
             <svg ref={svgRef} className="w-full h-full"></svg>
-            {/* HTML fallback overlay in case SVG fails */}
+            {/* HTML fallback overlay - always show words */}
             <div className="absolute inset-0 flex flex-wrap justify-center items-center gap-4 pointer-events-none">
                 {words.map((word, index) => (
                     <span
-                        key={index}
+                        key={`${word}-${index}`}
                         className="px-4 py-2 bg-white shadow-lg rounded-lg text-lg font-bold pointer-events-auto"
                         style={{
                             color: ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16'][index % 8],

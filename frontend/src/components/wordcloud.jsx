@@ -38,7 +38,10 @@ const WordCloudComp = () => {
       console.log("Received word on display page:", word);
       setWords((prevWords) => {
         const newWords = [...prevWords, word];
+        console.log("Previous words:", prevWords);
+        console.log("New word:", word);
         console.log("Updated words array:", newWords);
+        console.log("Total words count:", newWords.length);
         return newWords;
       });
     });
@@ -105,6 +108,9 @@ const WordCloudComp = () => {
               <div className="mb-4 text-center">
                 <p className="text-sm text-gray-600">
                   Received {words.length} response{words.length !== 1 ? 's' : ''}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Words: {words.join(', ')}
                 </p>
               </div>
               <WordCloud words={words} question={question} />
