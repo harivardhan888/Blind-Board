@@ -15,6 +15,8 @@ const WordCloud = ({ words, question }) => {
     const [hasError, setHasError] = useState(false);
 
     const createFallbackWordCloud = (words, width, height) => {
+        console.log("Creating fallback word cloud with words:", words);
+        
         const svg = d3
             .select(svgRef.current)
             .attr("width", width)
@@ -22,44 +24,59 @@ const WordCloud = ({ words, question }) => {
             .append("g")
             .attr("transform", `translate(${width / 2},${height / 2})`);
 
-        // Create a more visually appealing layout
-        const centerX = 0;
-        const centerY = 0;
-        const radius = Math.min(width, height) / 3;
+        const colors = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16', '#F97316', '#6366F1'];
 
-        svg.selectAll("text")
+        // Create text elements
+        const textElements = svg.selectAll("text")
             .data(words)
             .enter()
             .append("text")
-            .style("fill", (d, i) => {
-                const colors = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16'];
-                return colors[i % colors.length];
-            })
+            .style("fill", (d, i) => colors[i % colors.length])
             .style("font-size", (d, i) => {
-                // Vary font sizes for visual interest
-                const baseSize = 24;
-                const variation = Math.sin(i * 0.5) * 8;
+                const baseSize = 32;
+                const variation = Math.sin(i * 0.8) * 12;
                 return `${baseSize + variation}px`;
             })
             .style("font-weight", "bold")
             .style("font-family", "Arial, sans-serif")
+            .style("cursor", "pointer")
             .attr("text-anchor", "middle")
             .attr("dominant-baseline", "middle")
-            .attr("x", (d, i) => {
-                // Arrange words in a circular pattern
-                const angle = (i * 2 * Math.PI) / words.length;
-                return centerX + Math.cos(angle) * radius * (0.5 + Math.random() * 0.5);
-            })
-            .attr("y", (d, i) => {
-                const angle = (i * 2 * Math.PI) / words.length;
-                return centerY + Math.sin(angle) * radius * (0.5 + Math.random() * 0.5);
-            })
-            .attr("transform", (d, i) => {
-                // Add slight rotation for visual interest
-                const rotation = (Math.random() - 0.5) * 30;
-                return `rotate(${rotation})`;
-            })
             .text(d => d);
+
+        // Position words in a spiral pattern
+        textElements.each(function(d, i) {
+            const angle = (i * 2 * Math.PI) / words.length;
+            const radius = 80 + (i * 15); // Spiral outward
+            const x = Math.cos(angle) * radius;
+            const y = Math.sin(angle) * radius;
+            
+            d3.select(this)
+                .attr("x", x)
+                .attr("y", y)
+                .attr("transform", `rotate(${(Math.random() - 0.5) * 20})`);
+        });
+
+        // Add hover effects
+        textElements
+            .on("mouseover", function() {
+                d3.select(this)
+                    .style("opacity", 0.7)
+                    .style("font-size", function() {
+                        const currentSize = d3.select(this).style("font-size");
+                        return parseFloat(currentSize) * 1.2 + "px";
+                    });
+            })
+            .on("mouseout", function() {
+                d3.select(this)
+                    .style("opacity", 1)
+                    .style("font-size", function() {
+                        const currentSize = d3.select(this).style("font-size");
+                        return parseFloat(currentSize) / 1.2 + "px";
+                    });
+            });
+
+        console.log("Fallback word cloud created successfully");
     };
 
     useEffect(() => {
@@ -73,27 +90,10 @@ const WordCloud = ({ words, question }) => {
             // ✅ Clear previous drawing
             d3.select(svgRef.current).selectAll("*").remove();
 
-            // Check if cloud function is available
-            if (!cloud || typeof cloud !== 'function') {
-                console.warn('d3-cloud not available, using fallback layout');
-                createFallbackWordCloud(words, width, height);
-                return;
-            }
-
-            const layout = cloud()
-                .size([width, height])
-                .words(words.map(word => ({ 
-                    text: word, 
-                    size: Math.random() * 40 + 20,
-                    weight: Math.random() * 3 + 1
-                })))
-                .padding(10)
-                .rotate(() => (Math.random() > 0.5 ? 0 : 90))
-                .fontSize(d => d.size)
-                .fontWeight(d => d.weight)
-                .on("end", draw);
-
-            layout.start();
+            // Always use the fallback layout for now to ensure it works
+            console.log("Using fallback word cloud layout");
+            createFallbackWordCloud(words, width, height);
+            
         } catch (error) {
             console.error('Error creating word cloud:', error);
             setHasError(true);
@@ -155,7 +155,36 @@ const WordCloud = ({ words, question }) => {
         );
     }
 
-    return <svg ref={svgRef}></svg>;
+    // If no words, show waiting message
+    if (!words.length) {
+        return (
+            <div className="text-center text-gray-500 py-8">
+                <p className="text-lg">No words to display</p>
+            </div>
+        );
+    }
+
+    return (
+        <div className="relative">
+            <svg ref={svgRef} className="w-full h-full"></svg>
+            {/* HTML fallback overlay in case SVG fails */}
+            <div className="absolute inset-0 flex flex-wrap justify-center items-center gap-4 pointer-events-none">
+                {words.map((word, index) => (
+                    <span
+                        key={index}
+                        className="px-4 py-2 bg-white shadow-lg rounded-lg text-lg font-bold pointer-events-auto"
+                        style={{
+                            color: ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16'][index % 8],
+                            transform: `rotate(${(Math.random() - 0.5) * 20}deg)`,
+                            fontSize: `${32 + Math.random() * 16}px`
+                        }}
+                    >
+                        {word}
+                    </span>
+                ))}
+            </div>
+        </div>
+    );
 };
 
 export default WordCloud;
