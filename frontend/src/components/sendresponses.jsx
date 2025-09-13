@@ -35,6 +35,7 @@ const SendResponses = () => {
 
     if (firstResponse) {
       setIsSubmitting(true);
+      console.log("Emitting word from response panel:", firstResponse);
       socket.emit("word", firstResponse);
       setSubmitted(true);
       

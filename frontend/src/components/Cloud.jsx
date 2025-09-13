@@ -39,6 +39,7 @@ const WordCloud = ({ words, question }) => {
     };
 
     useEffect(() => {
+        console.log("Cloud component received words:", words);
         if (!words.length) return;
 
         try {

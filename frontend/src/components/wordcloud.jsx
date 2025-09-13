@@ -35,10 +35,16 @@ const WordCloudComp = () => {
 
     // Data handlers
     socket.on("word", (word) => {
-      setWords((prevWords) => [...prevWords, word]);
+      console.log("Received word on display page:", word);
+      setWords((prevWords) => {
+        const newWords = [...prevWords, word];
+        console.log("Updated words array:", newWords);
+        return newWords;
+      });
     });
 
     socket.on("question", (newQuestion) => {
+      console.log("Received new question on display page:", newQuestion);
       setQuestion(newQuestion);
       setWords([]);
     });
@@ -95,7 +101,14 @@ const WordCloudComp = () => {
           className="bg-white rounded-lg shadow-lg p-8"
         >
           {words.length > 0 ? (
-            <WordCloud words={words} question={question} />
+            <div>
+              <div className="mb-4 text-center">
+                <p className="text-sm text-gray-600">
+                  Received {words.length} response{words.length !== 1 ? 's' : ''}
+                </p>
+              </div>
+              <WordCloud words={words} question={question} />
+            </div>
           ) : (
             <div className="text-center text-gray-500 py-8">
               <Cloud className="w-16 h-16 mx-auto mb-4 text-gray-300" />
